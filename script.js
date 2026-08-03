@@ -115,7 +115,7 @@ function createDropdowns() {
   fillSelect(elements.basicStat, uniqueValues(1));
   fillSelect(elements.upgrade, uniqueValues(2));
   fillSelect(elements.category, uniqueValues(4));
-  fillSelect(elements.job, uniqueValues(5));
+  fillSelect(elements.job, uniqueJobValues());
   fillSelect(elements.machine, uniqueMachineValues());
 }
 
@@ -133,6 +133,18 @@ function uniqueMachineValues() {
   allRows.forEach(row => {
     splitMachines(row[6]).forEach(machine => {
       values.push(machine);
+    });
+  });
+
+  return [...new Set(values)].sort(compareVietnamese);
+}
+
+function uniqueJobValues() {
+  const values = [];
+
+  allRows.forEach(row => {
+    splitJobs(row[5]).forEach(job => {
+      values.push(job);
     });
   });
 
@@ -237,7 +249,7 @@ function filterAndRender() {
     quickStatMatch(row[1], selectedQuickStat) &&
     exactMatch(row[2], filters.upgrade) &&
     exactMatch(row[4], filters.category) &&
-    exactMatch(row[5], filters.job) &&
+    jobMatch(row[5], filters.job) &&
     machineMatch(row[6], filters.machine)
   );
 
@@ -482,12 +494,27 @@ function exactMatch(sourceValue, selectedValue) {
   return normalize(sourceValue) === selectedValue;
 }
 
+function jobMatch(sourceValue, selectedValue) {
+  if (!selectedValue) return true;
+
+  return splitJobs(sourceValue)
+    .map(normalize)
+    .includes(selectedValue);
+}
+
 function machineMatch(sourceValue, selectedValue) {
   if (!selectedValue) return true;
 
   return splitMachines(sourceValue)
     .map(normalize)
     .includes(selectedValue);
+}
+
+function splitJobs(value) {
+  return String(value ?? '')
+    .split(/[,;/|]+/)
+    .map(item => item.trim())
+    .filter(Boolean);
 }
 
 function splitMachines(value) {
